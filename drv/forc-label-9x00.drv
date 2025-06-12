@@ -5,6 +5,7 @@
 #include <media.defs>
 
 // Forc Label POS-9x00 Series
+// (Rebranded JENOTECK)
 {
   Manufacturer "Forc"
   ModelName "LABEL-9x00"
