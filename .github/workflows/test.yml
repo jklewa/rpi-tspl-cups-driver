@@ -2,9 +2,9 @@ name: Test CUPS Driver
 
 on:
   push:
-    branches: [add-test-infrastructure]
+    branches: [main, add-test-infrastructure]
   pull_request:
-    branches: [add-test-infrastructure]
+    branches: [main, add-test-infrastructure]
 
 env:
   DOCKER_BUILDKIT: 1

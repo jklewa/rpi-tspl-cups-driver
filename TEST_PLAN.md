@@ -17,7 +17,7 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 | Phase 1 | PPD Validation | ✅ Complete |
 | Phase 2 | DRV Compilation | ✅ Complete |
 | Phase 3 | Multi-Architecture Docker | ✅ Complete |
-| Phase 4 | Filter Output Testing | ⚠️ Partial (infrastructure only) |
+| Phase 4 | Filter Output Testing | ✅ Complete |
 | Phase 5 | GitHub Actions CI | ✅ Complete |
 
 ### Latest CI Results (Run #20770964934)
@@ -52,9 +52,9 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 #### Filter Output Testing
 - [x] Filter binary existence check
 - [x] Filter binary architecture verification (`file` command)
-- [ ] **TSPL output generation** (requires raster input files)
-- [ ] **TSPL command parsing** (parse-tspl.py exists but untested)
-- [ ] **Option validation** (expected outputs defined but not tested)
+- [x] **TSPL output generation** (raster files auto-generated in CI)
+- [x] **TSPL command parsing** (parse-tspl.py validates output structure)
+- [x] **Option validation** (5 test cases: default, darkness, speed, media, rotation)
 
 ### Issues Fixed During Implementation
 
@@ -70,26 +70,17 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 
 ### Immediate (Before Merge)
 
-- [ ] **Generate raster test files** - Run `test/fixtures/raster/generate-raster.sh` to create CUPS raster input files for filter testing
-- [ ] **Commit raster fixtures** - Add generated `.ras` files to repository (or generate in CI)
+- [x] **Implement raster file generation** - `generate-raster.sh` now creates CUPS raster files using ImageMagick + Ghostscript
+- [x] **Auto-generate in CI** - Filter tests automatically generate raster files if missing (via Dockerfiles with ghostscript/imagemagick)
+- [x] **Update workflow triggers** - Now triggers on both `main` and `add-test-infrastructure` branches
+- [x] **Add filter output validation tests** - 5 test cases implemented:
+  - Default options → validates TSPL structure
+  - Darkness=15 → validates DENSITY 15
+  - zePrintRate=2 → validates SPEED 2
+  - zeMediaTracking=BLine → validates BLINE command
+  - Rotate=1 → validates DIRECTION 1
 
 ### Post-Merge
-
-- [ ] **Update workflow triggers** - Change `.github/workflows/test.yml` to trigger on `main` branch:
-  ```yaml
-  on:
-    push:
-      branches: [main]
-    pull_request:
-      branches: [main]
-  ```
-
-- [ ] **Add filter output validation tests**:
-  - Default options → DENSITY 8, SPEED 4, GAP
-  - Darkness=15 → DENSITY 15
-  - zePrintRate=2 → SPEED 2
-  - zeMediaTracking=BLine → BLINE command
-  - Rotate=1 → DIRECTION 1
 
 - [ ] **Add PPD drift detection** - Compare compiled PPD against committed PPD to detect unintended changes
 

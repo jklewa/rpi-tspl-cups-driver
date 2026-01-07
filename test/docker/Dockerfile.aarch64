@@ -3,7 +3,7 @@
 
 FROM --platform=linux/arm64 debian:bullseye-slim
 
-# Install CUPS runtime dependencies
+# Install CUPS runtime dependencies and raster generation tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cups \
     cups-filters \
@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cups-ppdc \
     python3 \
     file \
+    ghostscript \
+    imagemagick \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directories
