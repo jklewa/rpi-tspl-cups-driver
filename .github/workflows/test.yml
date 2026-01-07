@@ -1,0 +1,109 @@
+name: Test CUPS Driver
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # Job 1: aarch64 Tests (emulated ARM64)
+  # Runs all tests: PPD validation, DRV compilation, filter output
+  test-aarch64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build aarch64 test image
+        run: |
+          docker buildx build \
+            --platform linux/arm64 \
+            --load \
+            -t tspl-test-aarch64 \
+            -f test/docker/Dockerfile.aarch64 \
+            .
+
+      - name: Run aarch64 tests
+        run: |
+          mkdir -p test-output
+          docker run --rm \
+            -v "$PWD/test-output:/opt/test/output" \
+            tspl-test-aarch64 --all
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-aarch64
+          path: test-output/
+
+  # Job 2: armv7 Tests (emulated ARM32)
+  # Runs all tests: PPD validation, DRV compilation, filter output
+  test-armv7:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build armv7 test image
+        run: |
+          docker buildx build \
+            --platform linux/arm/v7 \
+            --load \
+            -t tspl-test-armv7 \
+            -f test/docker/Dockerfile.armv7 \
+            .
+
+      - name: Run armv7 tests
+        run: |
+          mkdir -p test-output
+          docker run --rm \
+            -v "$PWD/test-output:/opt/test/output" \
+            tspl-test-armv7 --all
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-armv7
+          path: test-output/
+
+  # Job 3: Summary
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [test-aarch64, test-armv7]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate summary
+        run: |
+          echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Architecture | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| aarch64 (ARM64) | ${{ needs.test-aarch64.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| armv7 (ARM32) | ${{ needs.test-armv7.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All tests run in ARM containers with filter installed for accurate validation." >> $GITHUB_STEP_SUMMARY

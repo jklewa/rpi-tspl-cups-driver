@@ -1,0 +1,44 @@
+# Purpose: Test environment for aarch64 filter binary
+# Requires: docker buildx with QEMU for ARM64 emulation
+
+FROM --platform=linux/arm64 debian:bullseye-slim
+
+# Install CUPS runtime dependencies and raster generation tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cups \
+    cups-filters \
+    cups-client \
+    libcups2 \
+    libcupsimage2 \
+    cups-ppdc \
+    python3 \
+    file \
+    ghostscript \
+    imagemagick \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create directories
+RUN mkdir -p /opt/test/fixtures /opt/test/output /usr/lib/cups/filter /opt/test/ppd
+
+WORKDIR /opt/test
+
+# Copy filter binary
+COPY filters/aarch64/cups_2.4.0/raster-tspl /usr/lib/cups/filter/raster-tspl
+RUN chmod 755 /usr/lib/cups/filter/raster-tspl
+
+# Copy PPD files
+COPY ppd/ /opt/test/ppd/
+
+# Copy DRV files
+COPY drv/ /opt/test/drv/
+
+# Copy test scripts
+COPY test/scripts/ /opt/test/scripts/
+COPY test/fixtures/ /opt/test/fixtures/
+COPY test/lib/ /opt/test/lib/
+
+# Verify filter is executable
+RUN file /usr/lib/cups/filter/raster-tspl && \
+    /usr/lib/cups/filter/raster-tspl --help 2>&1 || true
+
+ENTRYPOINT ["/opt/test/scripts/run-tests.sh"]

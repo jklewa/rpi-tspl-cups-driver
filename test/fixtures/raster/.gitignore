@@ -1,0 +1,6 @@
+# Generated raster files (created by generate-raster.sh)
+*.ras
+*.ppm
+*.png
+*.ps
+*.pdf
