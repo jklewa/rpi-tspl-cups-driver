@@ -20,11 +20,11 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 | Phase 4 | Filter Output Testing | ✅ Complete |
 | Phase 5 | GitHub Actions CI | ✅ Complete |
 
-### Latest CI Results (Run #20771489122)
+### Latest CI Results
 
 | Job | Status | Details |
 |-----|--------|---------|
-| validate-ppd | ✅ Success | 6/6 PPDs validated, 1/1 DRV compiled |
+| validate-ppd | ✅ Success | 6/6 PPDs validated, 1/1 DRV compiled, zero cupstestppd dimension errors |
 | test-aarch64 | ✅ Success | 5/5 filter tests passed |
 | test-armv7 | ✅ Success | 5/5 filter tests passed |
 | test-summary | ✅ Success | All tests passed |
@@ -42,7 +42,7 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 ### Detailed Test Coverage
 
 #### PPD Validation (6 PPD files)
-- [x] `cupstestppd` execution (informational - expected failures for custom label sizes)
+- [x] `cupstestppd` execution (zero dimension errors; only expected "missing filter" warning)
 - [x] `cupsModelNumber: 20` attribute present
 - [x] `cupsFilter: raster-tspl` reference present
 - [x] `Darkness` option defined
@@ -69,12 +69,17 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 ### Issues Fixed During Implementation
 
 1. **UIConstraints error** - Removed broken references to non-existent `Occurrence`/`SpecifiedPages` options from all PPDs and DRV source
-2. **cupstestppd failures** - Made informational-only; expected failures for:
-   - Missing filter file on x86 (filter only exists on ARM)
-   - Custom page size dimensions (label printers use non-standard sizes)
-3. **Bash arithmetic bug** - Changed `((VAR++))` to `((++VAR))` to avoid exit code 1 with `set -e`
-4. **ImageMagick security policy** - Debian blocks PS/PDF output; added `cupsfilter` fallback for raster generation
-5. **Ghostscript CUPS device** - Not available in slim containers; `cupsfilter` successfully generates CUPS raster files
+2. **cupstestppd dimension errors** - Fixed page size naming to use Zebra-style convention:
+   - Names now use actual point dimensions (e.g., `w288h432` for 288×432 points)
+   - Human-readable labels follow the slash (e.g., `w288h432/4"x6" 101.6x152.4mm`)
+   - This reduced ~35 "unexpected dimensions" errors to zero
+3. **Dimension bugs in 2.5"/2.75" labels** - Fixed pre-existing copy-paste errors where smaller label entries incorrectly used larger PageSize dimensions:
+   - `w197h90` (2.75"×1.25"): was using `[213 90]`, now `[197 90]`
+   - `w179h142` (2.5"×2"): was using `[283 142]`, now `[179 142]`
+   - `w179h71` (2.5"×1"): was using `[283 71]`, now `[179 71]`
+4. **Bash arithmetic bug** - Changed `((VAR++))` to `((++VAR))` to avoid exit code 1 with `set -e`
+5. **ImageMagick security policy** - Debian blocks PS/PDF output; added `cupsfilter` fallback for raster generation
+6. **Ghostscript CUPS device** - Not available in slim containers; `cupsfilter` successfully generates CUPS raster files
 
 ---
 
