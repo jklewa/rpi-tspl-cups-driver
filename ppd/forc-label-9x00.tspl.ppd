@@ -36,7 +36,7 @@
 *OpenUI *PageSize/Media Size: PickOne
 *OrderDependency: 10 AnySetup *PageSize
 *DefaultPageSize: w100h150
-*PageSize w100h150/4"x6"(101.6mm x 152.4mm): "<</PageSize[283 425]/ImagingBBox null>>setpagedevice"
+*PageSize w100h150/4"x6"(101.6mm x 152.4mm): "<</PageSize[288 432]/ImagingBBox null>>setpagedevice"
 *PageSize w100h25/4"x1"(101.6mm x 25.4mm): "<</PageSize[283 71]/ImagingBBox null>>setpagedevice"
 *PageSize w100h50/4"x2"(101.6mm x 50.8mm): "<</PageSize[283 142]/ImagingBBox null>>setpagedevice"
 *PageSize w100h75/4"x3"(101.6mm x 76.2mm): "<</PageSize[283 213]/ImagingBBox null>>setpagedevice"
@@ -75,7 +75,7 @@
 *OpenUI *PageRegion/Media Size: PickOne
 *OrderDependency: 10 AnySetup *PageRegion
 *DefaultPageRegion: w100h150
-*PageRegion w100h150/4"x6"(101.6mm x 152.4mm): "<</PageSize[283 425]/ImagingBBox null>>setpagedevice"
+*PageRegion w100h150/4"x6"(101.6mm x 152.4mm): "<</PageSize[288 432]/ImagingBBox null>>setpagedevice"
 *PageRegion w100h25/4"x1"(101.6mm x 25.4mm): "<</PageSize[283 71]/ImagingBBox null>>setpagedevice"
 *PageRegion w100h50/4"x2"(101.6mm x 50.8mm): "<</PageSize[283 142]/ImagingBBox null>>setpagedevice"
 *PageRegion w100h75/4"x3"(101.6mm x 76.2mm): "<</PageSize[283 213]/ImagingBBox null>>setpagedevice"
@@ -112,7 +112,7 @@
 *PageRegion w50h12/2"x0.5"(50.8mm x 12.7mm): "<</PageSize[142 36]/ImagingBBox null>>setpagedevice"
 *CloseUI: *PageRegion
 *DefaultImageableArea: w100h150
-*ImageableArea w100h150/4"x6"(101.6mm x 152.4mm): "0 0 283 425"
+*ImageableArea w100h150/4"x6"(101.6mm x 152.4mm): "0 0 288 432"
 *ImageableArea w100h25/4"x1"(101.6mm x 25.4mm): "0 0 283 71"
 *ImageableArea w100h50/4"x2"(101.6mm x 50.8mm): "0 0 283 142"
 *ImageableArea w100h75/4"x3"(101.6mm x 76.2mm): "0 0 283 213"
@@ -148,7 +148,7 @@
 *ImageableArea w50h25/2"x1"(50.8mm x 25.4mm): "0 0 142 71"
 *ImageableArea w50h12/2"x0.5"(50.8mm x 12.7mm): "0 0 142 36"
 *DefaultPaperDimension: w100h150
-*PaperDimension w100h150/4"x6"(101.6mm x 152.4mm): "283 425"
+*PaperDimension w100h150/4"x6"(101.6mm x 152.4mm): "288 432"
 *PaperDimension w100h25/4"x1"(101.6mm x 25.4mm): "283 71"
 *PaperDimension w100h50/4"x2"(101.6mm x 50.8mm): "283 142"
 *PaperDimension w100h75/4"x3"(101.6mm x 76.2mm): "283 213"
@@ -206,121 +206,116 @@
 *CloseUI: *ColorOption
 *CloseGroup: Quality
 *OpenGroup: PrinterOptions/Printer Options
-*OpenUI *Orientation/Orientation: PickOne
-*OrderDependency: 10 AnySetup *Orientation
-*DefaultOrientation: 0
-*Orientation 0/0 degrees: ""
-*Orientation 2/180 degrees: ""
-*CloseUI: *Orientation
-*OpenUI *MediaMethod/Method: PickOne
-*OrderDependency: 110 AnySetup *MediaMethod
-*DefaultMediaMethod: None
-*MediaMethod None/Use Currently Printer Setting: ""
-*MediaMethod 1/Direct Thermal: ""
-*CloseUI: *MediaMethod
-*OpenUI *PaperType/Type: PickOne
-*OrderDependency: 120 AnySetup *PaperType
-*DefaultPaperType: None
-*PaperType None/Use Currently Printer Setting: ""
-*PaperType 1/Label with Gaps: ""
-*PaperType 2/Label with Mark: ""
-*PaperType 3/Continue: ""
-*CloseUI: *PaperType
-*OpenUI *PrintSpeed/Print Speed: PickOne
-*OrderDependency: 310 AnySetup *PrintSpeed
-*DefaultPrintSpeed: None
-*PrintSpeed None/Use Currently Printer Setting: ""
-*PrintSpeed 2/2.00 in/sec: ""
-*PrintSpeed 3/3.00 in/sec: ""
-*PrintSpeed 4/4.00 in/sec: ""
-*CloseUI: *PrintSpeed
-*OpenUI *PrintDarkness/Print Darkness: PickOne
-*OrderDependency: 320 AnySetup *PrintDarkness
-*DefaultPrintDarkness: None
-*PrintDarkness None/Use Currently Printer Setting: ""
-*PrintDarkness 0/0: ""
-*PrintDarkness 1/1: ""
-*PrintDarkness 2/2: ""
-*PrintDarkness 3/3: ""
-*PrintDarkness 4/4: ""
-*PrintDarkness 5/5: ""
-*PrintDarkness 6/6: ""
-*PrintDarkness 7/7: ""
-*PrintDarkness 8/8: ""
-*PrintDarkness 9/9: ""
-*PrintDarkness 10/10: ""
-*PrintDarkness 11/11: ""
-*PrintDarkness 12/12: ""
-*PrintDarkness 13/13: ""
-*PrintDarkness 14/14: ""
-*PrintDarkness 15/15: ""
-*CloseUI: *PrintDarkness
-*OpenUI *ShiftMove/Start Position: PickOne
-*OrderDependency: 510 AnySetup *ShiftMove
-*DefaultShiftMove: None
-*ShiftMove -12/-12mm: ""
-*ShiftMove -11/-11mm: ""
-*ShiftMove -10/-10mm: ""
-*ShiftMove -9/-9mm: ""
-*ShiftMove -8/-8mm: ""
-*ShiftMove -7/-7mm: ""
-*ShiftMove -6/-6mm: ""
-*ShiftMove -5/-5mm: ""
-*ShiftMove -4/-4mm: ""
-*ShiftMove -3/-3mm: ""
-*ShiftMove -2/-2mm: ""
-*ShiftMove -1/-1mm: ""
-*ShiftMove None/Use Currently Printer Setting: ""
-*ShiftMove 0/0mm: ""
-*ShiftMove 1/1mm: ""
-*ShiftMove 2/2mm: ""
-*ShiftMove 3/3mm: ""
-*ShiftMove 4/4mm: ""
-*ShiftMove 5/5mm: ""
-*ShiftMove 6/6mm: ""
-*ShiftMove 7/7mm: ""
-*ShiftMove 8/8mm: ""
-*ShiftMove 9/9mm: ""
-*ShiftMove 10/10mm: ""
-*ShiftMove 11/11mm: ""
-*ShiftMove 12/12mm: ""
-*CloseUI: *ShiftMove
-*OpenUI *PostAction/Post-Print Action: PickOne
-*OrderDependency: 610 AnySetup *PostAction
-*DefaultPostAction: 1
-*PostAction None/None: ""
-*PostAction 1/Tear Off: ""
-*CloseUI: *PostAction
-*OpenUI *FowardOffset/Stop Offset: PickOne
-*OrderDependency: 710 AnySetup *FowardOffset
-*DefaultFowardOffset: None
-*FowardOffset -5/-5mm: ""
-*FowardOffset -4/-4mm: ""
-*FowardOffset -3/-3mm: ""
-*FowardOffset -2/-2mm: ""
-*FowardOffset -1/-1mm: ""
-*FowardOffset None/Use Currently Printer Setting: ""
-*FowardOffset 0/0mm: ""
-*FowardOffset 1/1mm: ""
-*FowardOffset 2/2mm: ""
-*FowardOffset 3/3mm: ""
-*FowardOffset 4/4mm: ""
-*FowardOffset 5/5mm: ""
-*CloseUI: *FowardOffset
+
+*OpenUI *Rotate/Orientation: PickOne
+*OrderDependency: 10 AnySetup *Rotate
+*DefaultRotate: 0
+*Rotate 0/0 degrees: ""
+*Rotate 1/180 degrees: ""
+*CloseUI: *Rotate
+
+*OpenUI *zeMediaTracking/Media Type: PickOne
+*OrderDependency: 120 AnySetup *zeMediaTracking
+*DefaultzeMediaTracking: Gap
+*zeMediaTracking Gap/Label with Gaps: ""
+*zeMediaTracking BLine/Label with Mark: ""
+*zeMediaTracking Continuous/Continuous: ""
+*CloseUI: *zeMediaTracking
+
+*OpenUI *zePrintRate/Print Speed: PickOne
+*OrderDependency: 310 AnySetup *zePrintRate
+*DefaultzePrintRate: 4
+*zePrintRate 2/2.00 in/sec: ""
+*zePrintRate 3/3.00 in/sec: ""
+*zePrintRate 4/4.00 in/sec: ""
+*CloseUI: *zePrintRate
+
+*OpenUI *Darkness/Print Darkness: PickOne
+*OrderDependency: 320 AnySetup *Darkness
+*DefaultDarkness: 8
+*Darkness 0/0: ""
+*Darkness 1/1: ""
+*Darkness 2/2: ""
+*Darkness 3/3: ""
+*Darkness 4/4: ""
+*Darkness 5/5: ""
+*Darkness 6/6: ""
+*Darkness 7/7: ""
+*Darkness 8/8: ""
+*Darkness 9/9: ""
+*Darkness 10/10: ""
+*Darkness 11/11: ""
+*Darkness 12/12: ""
+*Darkness 13/13: ""
+*Darkness 14/14: ""
+*Darkness 15/15: ""
+*CloseUI: *Darkness
+
+*OpenUI *FeedOffset/Feed Offset: PickOne
+*OrderDependency: 510 AnySetup *FeedOffset
+*DefaultFeedOffset: 0
+*FeedOffset -12/-12mm: ""
+*FeedOffset -11/-11mm: ""
+*FeedOffset -10/-10mm: ""
+*FeedOffset -9/-9mm: ""
+*FeedOffset -8/-8mm: ""
+*FeedOffset -7/-7mm: ""
+*FeedOffset -6/-6mm: ""
+*FeedOffset -5/-5mm: ""
+*FeedOffset -4/-4mm: ""
+*FeedOffset -3/-3mm: ""
+*FeedOffset -2/-2mm: ""
+*FeedOffset -1/-1mm: ""
+*FeedOffset 0/0mm: ""
+*FeedOffset 1/1mm: ""
+*FeedOffset 2/2mm: ""
+*FeedOffset 3/3mm: ""
+*FeedOffset 4/4mm: ""
+*FeedOffset 5/5mm: ""
+*FeedOffset 6/6mm: ""
+*FeedOffset 7/7mm: ""
+*FeedOffset 8/8mm: ""
+*FeedOffset 9/9mm: ""
+*FeedOffset 10/10mm: ""
+*FeedOffset 11/11mm: ""
+*FeedOffset 12/12mm: ""
+*CloseUI: *FeedOffset
+
+*OpenUI *AdjustVertical/Vertical Adjust: PickOne
+*OrderDependency: 520 AnySetup *AdjustVertical
+*DefaultAdjustVertical: 0
+*AdjustVertical -50/-50 dots: ""
+*AdjustVertical -40/-40 dots: ""
+*AdjustVertical -30/-30 dots: ""
+*AdjustVertical -20/-20 dots: ""
+*AdjustVertical -10/-10 dots: ""
+*AdjustVertical 0/0 dots: ""
+*AdjustVertical 10/10 dots: ""
+*AdjustVertical 20/20 dots: ""
+*AdjustVertical 30/30 dots: ""
+*AdjustVertical 40/40 dots: ""
+*AdjustVertical 50/50 dots: ""
+*AdjustVertical 60/60 dots: ""
+*AdjustVertical 80/80 dots: ""
+*AdjustVertical 100/100 dots: ""
+*CloseUI: *AdjustVertical
+
+*OpenUI *AdjustHoriaontal/Horizontal Adjust: PickOne
+*OrderDependency: 530 AnySetup *AdjustHoriaontal
+*DefaultAdjustHoriaontal: 0
+*AdjustHoriaontal -50/-50 dots: ""
+*AdjustHoriaontal -40/-40 dots: ""
+*AdjustHoriaontal -30/-30 dots: ""
+*AdjustHoriaontal -20/-20 dots: ""
+*AdjustHoriaontal -10/-10 dots: ""
+*AdjustHoriaontal 0/0 dots: ""
+*AdjustHoriaontal 10/10 dots: ""
+*AdjustHoriaontal 20/20 dots: ""
+*AdjustHoriaontal 30/30 dots: ""
+*AdjustHoriaontal 40/40 dots: ""
+*AdjustHoriaontal 50/50 dots: ""
+*CloseUI: *AdjustHoriaontal
+
 *CloseGroup: PrinterOptions
-*OpenGroup: effects/Effectives
-*OpenUI *MirrorImage/Mirror Image: Boolean
-*OrderDependency: 210 AnySetup *MirrorImage
-*DefaultMirrorImage: False
-*MirrorImage True/Yes: ""
-*MirrorImage False/No : ""
-*CloseUI: *MirrorImage
-*OpenUI *NegativeImage/Negative Image: Boolean
-*OrderDependency: 220 AnySetup *NegativeImage
-*DefaultNegativeImage: False
-*NegativeImage True/Yes: ""
-*NegativeImage False/No : ""
-*CloseUI: *NegativeImage
-*CloseGroup: effects
 *DefaultFont: Courier
 *% End of forc-label-9x00.tspl.ppd, 17471 bytes.
