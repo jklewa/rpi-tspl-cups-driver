@@ -74,58 +74,61 @@ generate_raster() {
     echo "  Size: ${width_pts}x${height_pts} points"
 
     local png_file="$OUTPUT_DIR/${name}.png"
-    local ps_file="$OUTPUT_DIR/${name}.ps"
+    local pdf_file="$OUTPUT_DIR/${name}.pdf"
     local ras_file="$OUTPUT_DIR/${name}.ras"
 
     # Create test image with ImageMagick
     # Using a simple pattern that will be visible in TSPL output
     convert -size "${width_pts}x${height_pts}" \
-        -gravity center \
-        -font Helvetica \
-        -pointsize 24 \
         xc:white \
         -fill black \
         -draw "rectangle 10,10 $((width_pts-10)),$((height_pts-10))" \
         -fill white \
         -draw "rectangle 20,20 $((width_pts-20)),$((height_pts-20))" \
-        -fill black \
-        -annotate +0+0 "TEST: $name" \
-        "$png_file" 2>/dev/null || {
-            # Fallback if font not available
-            convert -size "${width_pts}x${height_pts}" \
-                xc:white \
-                -fill black \
-                -draw "rectangle 10,10 $((width_pts-10)),$((height_pts-10))" \
-                -fill white \
-                -draw "rectangle 20,20 $((width_pts-20)),$((height_pts-20))" \
-                "$png_file"
-        }
+        "$png_file"
 
     echo "  Created PNG: $png_file"
 
-    # Convert PNG to PostScript
-    convert "$png_file" "$ps_file"
-    echo "  Created PS: $ps_file"
+    # Convert PNG to PDF (avoids ImageMagick PS security policy)
+    convert "$png_file" -page "${width_pts}x${height_pts}+0+0" "$pdf_file" 2>/dev/null || {
+        echo "  WARNING: PDF conversion failed, trying direct GS approach"
+    }
 
-    # Convert PostScript to CUPS raster using Ghostscript
+    # Try to convert to CUPS raster using Ghostscript
+    # First try with PDF if it exists, otherwise use PNG directly
+    local input_file="$pdf_file"
+    [[ -f "$pdf_file" ]] || input_file="$png_file"
+
+    echo "  Converting to CUPS raster..."
+
     # The 'cups' device creates CUPS raster format
-    # We need to set page size to match the label dimensions
-    gs -q -dNOPAUSE -dBATCH -dSAFER \
+    if gs -q -dNOPAUSE -dBATCH -dSAFER \
         -sDEVICE=cups \
         -sOutputFile="$ras_file" \
         -dDEVICEWIDTHPOINTS="$width_pts" \
         -dDEVICEHEIGHTPOINTS="$height_pts" \
         -r203 \
-        "$ps_file" 2>/dev/null || {
-            echo "  WARNING: Ghostscript CUPS device failed, trying ppmraw fallback"
-            # Fallback: create a raw bitmap that can be used for testing
-            gs -q -dNOPAUSE -dBATCH -dSAFER \
-                -sDEVICE=ppmraw \
-                -sOutputFile="$OUTPUT_DIR/${name}.ppm" \
-                -r203 \
-                -g"${width_pts}x${height_pts}" \
-                "$ps_file" 2>/dev/null || true
-        }
+        "$input_file" 2>/dev/null; then
+        :
+    else
+        echo "  WARNING: Ghostscript CUPS device not available"
+
+        # Alternative: Use cupsfilter if available (converts PNG to raster)
+        if command -v cupsfilter &> /dev/null && [[ -n "$PPD_FILE" ]]; then
+            echo "  Trying cupsfilter..."
+            if cupsfilter -p "$PPD_FILE" -m "application/vnd.cups-raster" "$png_file" > "$ras_file" 2>/dev/null; then
+                echo "  Used cupsfilter"
+            else
+                rm -f "$ras_file"
+            fi
+        fi
+
+        # If still no raster, create a minimal valid CUPS raster file
+        if [[ ! -f "$ras_file" ]]; then
+            echo "  Creating minimal CUPS raster file..."
+            create_minimal_raster "$ras_file" "$width_pts" "$height_pts"
+        fi
+    fi
 
     if [[ -f "$ras_file" ]]; then
         local size=$(stat -c%s "$ras_file" 2>/dev/null || stat -f%z "$ras_file" 2>/dev/null)
@@ -135,7 +138,125 @@ generate_raster() {
     fi
 
     # Clean up intermediate files
-    rm -f "$png_file" "$ps_file"
+    rm -f "$png_file" "$pdf_file"
+}
+
+# Create a minimal valid CUPS raster file for testing
+# This creates a simple grayscale raster that the filter can process
+create_minimal_raster() {
+    local output_file="$1"
+    local width_pts="$2"
+    local height_pts="$3"
+
+    # Calculate dimensions at 203 DPI
+    local width_px=$(( (width_pts * 203) / 72 ))
+    local height_px=$(( (height_pts * 203) / 72 ))
+
+    # CUPS raster v2 header (sync word + page header)
+    # This is a simplified version - the filter may need specific header values
+    python3 - "$output_file" "$width_px" "$height_px" << 'PYTHON_SCRIPT'
+import sys
+import struct
+
+output_file = sys.argv[1]
+width = int(sys.argv[2])
+height = int(sys.argv[3])
+
+# CUPS Raster file format (version 2)
+# Sync word: "RaS2" for little-endian
+sync_word = b'RaS2'
+
+# Page header (simplified - 1796 bytes for CUPS raster v2)
+# Most fields are 0 or have reasonable defaults
+header = bytearray(1796)
+
+# MediaClass (64 bytes at offset 0)
+# MediaColor (64 bytes at offset 64)
+# MediaType (64 bytes at offset 128)
+# OutputType (64 bytes at offset 192)
+
+# AdvanceDistance (4 bytes at offset 256)
+# AdvanceMedia (4 bytes at offset 260)
+# Collate (4 bytes at offset 264)
+# CutMedia (4 bytes at offset 268)
+# Duplex (4 bytes at offset 272)
+
+# HWResolution (8 bytes at offset 276) - 203x203 DPI
+struct.pack_into('<II', header, 276, 203, 203)
+
+# ImagingBoundingBox (16 bytes at offset 284)
+struct.pack_into('<IIII', header, 284, 0, 0, width, height)
+
+# Margins (8 bytes at offset 316)
+# ManualFeed (4 bytes at offset 324)
+# MediaPosition (4 bytes at offset 328)
+# MediaWeight (4 bytes at offset 332)
+# MirrorPrint (4 bytes at offset 336)
+# NegativePrint (4 bytes at offset 340)
+# NumCopies (4 bytes at offset 344)
+struct.pack_into('<I', header, 344, 1)
+
+# Orientation (4 bytes at offset 348)
+# OutputFaceUp (4 bytes at offset 352)
+
+# PageSize (8 bytes at offset 356) - in points
+struct.pack_into('<II', header, 356, width * 72 // 203, height * 72 // 203)
+
+# Separations (4 bytes at offset 364)
+# TraySwitch (4 bytes at offset 368)
+# Tumble (4 bytes at offset 372)
+
+# cupsWidth (4 bytes at offset 376)
+struct.pack_into('<I', header, 376, width)
+
+# cupsHeight (4 bytes at offset 380)
+struct.pack_into('<I', header, 380, height)
+
+# cupsMediaType (4 bytes at offset 384)
+# cupsBitsPerColor (4 bytes at offset 388)
+struct.pack_into('<I', header, 388, 8)
+
+# cupsBitsPerPixel (4 bytes at offset 392)
+struct.pack_into('<I', header, 392, 8)
+
+# cupsBytesPerLine (4 bytes at offset 396)
+struct.pack_into('<I', header, 396, width)
+
+# cupsColorOrder (4 bytes at offset 400) - chunky
+# cupsColorSpace (4 bytes at offset 404) - grayscale (3)
+struct.pack_into('<I', header, 404, 3)
+
+# cupsCompression (4 bytes at offset 408)
+# cupsRowCount (4 bytes at offset 412)
+# cupsRowFeed (4 bytes at offset 416)
+# cupsRowStep (4 bytes at offset 420)
+
+# cupsNumColors (4 bytes at offset 424)
+struct.pack_into('<I', header, 424, 1)
+
+# Remaining fields are 0
+
+# Create simple grayscale image data (white background with black border)
+row_data = bytearray(width)
+for x in range(width):
+    if x < 10 or x >= width - 10:
+        row_data[x] = 0  # Black border
+    else:
+        row_data[x] = 255  # White interior
+
+# Write the file
+with open(output_file, 'wb') as f:
+    f.write(sync_word)
+    f.write(header)
+    for y in range(height):
+        if y < 10 or y >= height - 10:
+            # Black row for top/bottom border
+            f.write(bytes([0] * width))
+        else:
+            f.write(row_data)
+
+print(f"  Created minimal raster: {width}x{height} pixels")
+PYTHON_SCRIPT
 }
 
 # Common label sizes (width x height in points, 1 inch = 72 points)
