@@ -24,10 +24,11 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 
 | Job | Status | Details |
 |-----|--------|---------|
-| validate-ppd | ✅ Success | 6/6 PPDs validated, 1/1 DRV compiled, zero cupstestppd dimension errors |
-| test-aarch64 | ✅ Success | 5/5 filter tests passed |
-| test-armv7 | ✅ Success | 5/5 filter tests passed |
+| test-aarch64 | ✅ Success | PPD validation + DRV compilation + 5/5 filter tests |
+| test-armv7 | ✅ Success | PPD validation + DRV compilation + 5/5 filter tests |
 | test-summary | ✅ Success | All tests passed |
+
+**Note:** All tests run in ARM Docker containers (via QEMU emulation) where the filter binary is installed. This enables strict `cupstestppd` validation.
 
 ### Filter Test Results
 
@@ -42,7 +43,7 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 ### Detailed Test Coverage
 
 #### PPD Validation (6 PPD files)
-- [x] `cupstestppd` execution (zero dimension errors; only expected "missing filter" warning)
+- [x] `cupstestppd` execution (runs in ARM containers where filter is installed - strict validation)
 - [x] `cupsModelNumber: 20` attribute present
 - [x] `cupsFilter: raster-tspl` reference present
 - [x] `Darkness` option defined
@@ -165,9 +166,9 @@ test/
 - Validate commands: SIZE, DENSITY, SPEED, GAP/BLINE, DIRECTION, BITMAP, PRINT
 
 ### Phase 5: GitHub Actions CI
-- Job 1: PPD validation + DRV compilation (x86, fast)
-- Job 2: aarch64 filter tests (QEMU emulated)
-- Job 3: armv7 filter tests (QEMU emulated)
+- Job 1: aarch64 tests (QEMU emulated) - PPD validation, DRV compilation, filter tests
+- Job 2: armv7 tests (QEMU emulated) - PPD validation, DRV compilation, filter tests
+- Jobs run in parallel for faster feedback
 - Artifact upload for test results
 
 ## Test Cases
@@ -308,83 +309,31 @@ name: Test CUPS Driver
 
 on:
   push:
-    branches: [main]
+    branches: [main, add-test-infrastructure]
   pull_request:
-    branches: [main]
+    branches: [main, add-test-infrastructure]
 
 env:
   DOCKER_BUILDKIT: 1
 
 jobs:
-  validate-ppd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install CUPS tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cups cups-filters cups-ppdc
-
-      - name: Validate PPD files
-        run: |
-          for ppd in ppd/*.ppd; do
-            echo "Validating $ppd..."
-            cupstestppd -v "$ppd" || exit 1
-          done
-
-      - name: Check required PPD attributes
-        run: |
-          for ppd in ppd/*.ppd; do
-            echo "Checking $ppd..."
-            grep -q "cupsModelNumber.*20" "$ppd" || { echo "Missing cupsModelNumber 20"; exit 1; }
-            grep -q "raster-tspl" "$ppd" || { echo "Missing raster-tspl filter"; exit 1; }
-          done
-
-      - name: Compile DRV files
-        run: |
-          mkdir -p build/ppd
-          for drv in drv/*.drv; do
-            echo "Compiling $drv..."
-            ppdc -d build/ppd -l en --lf -v "$drv" || exit 1
-          done
-
-      - name: Upload compiled PPDs
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-ppds
-          path: build/ppd/
-
+  # All tests run in ARM containers where filter is installed
   test-aarch64:
     runs-on: ubuntu-latest
-    needs: validate-ppd
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: docker/setup-buildx-action@v3
       - name: Build and test aarch64
         run: |
-          docker buildx build \
-            --platform linux/arm64 \
-            --load \
-            -t tspl-test-aarch64 \
-            -f test/docker/Dockerfile.aarch64 \
-            .
-
+          docker buildx build --platform linux/arm64 --load \
+            -t tspl-test-aarch64 -f test/docker/Dockerfile.aarch64 .
           mkdir -p test-output
-          docker run --rm \
-            -v "$PWD/test-output:/opt/test/output" \
+          docker run --rm -v "$PWD/test-output:/opt/test/output" \
             tspl-test-aarch64 --all
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-aarch64
@@ -392,34 +341,20 @@ jobs:
 
   test-armv7:
     runs-on: ubuntu-latest
-    needs: validate-ppd
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v3
         with:
           platforms: arm
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: docker/setup-buildx-action@v3
       - name: Build and test armv7
         run: |
-          docker buildx build \
-            --platform linux/arm/v7 \
-            --load \
-            -t tspl-test-armv7 \
-            -f test/docker/Dockerfile.armv7 \
-            .
-
+          docker buildx build --platform linux/arm/v7 --load \
+            -t tspl-test-armv7 -f test/docker/Dockerfile.armv7 .
           mkdir -p test-output
-          docker run --rm \
-            -v "$PWD/test-output:/opt/test/output" \
+          docker run --rm -v "$PWD/test-output:/opt/test/output" \
             tspl-test-armv7 --all
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-armv7
@@ -427,18 +362,16 @@ jobs:
 
   test-summary:
     runs-on: ubuntu-latest
-    needs: [validate-ppd, test-aarch64, test-armv7]
+    needs: [test-aarch64, test-armv7]
     if: always()
     steps:
       - name: Generate summary
         run: |
           echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| PPD Validation | ${{ needs.validate-ppd.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| aarch64 Filter | ${{ needs.test-aarch64.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| armv7 Filter | ${{ needs.test-armv7.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Architecture | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| aarch64 | ${{ needs.test-aarch64.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| armv7 | ${{ needs.test-armv7.result }} |" >> $GITHUB_STEP_SUMMARY
 ```
 
 ## TSPL Parser Output Format

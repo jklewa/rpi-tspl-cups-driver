@@ -29,15 +29,17 @@ for drv_file in "${DRV_DIR}"/*.drv; do
         echo "PASS"
         ((++PASSED))
 
-        # Validate the generated PPD
+        # Validate the generated PPD with strict cupstestppd
         for compiled_ppd in "${COMPILED_PPD_DIR}"/*.ppd; do
             if [[ -f "$compiled_ppd" ]]; then
                 compiled_name=$(basename "$compiled_ppd")
                 echo -n "  Validating generated ${compiled_name}... "
-                if cupstestppd "$compiled_ppd" > /dev/null 2>&1; then
+                if cupstestppd -W none "$compiled_ppd" > "${OUTPUT_DIR}/${compiled_name}.cupstestppd.log" 2>&1; then
                     echo "PASS"
                 else
-                    echo "WARN (cupstestppd issues)"
+                    echo "FAIL"
+                    grep -E "(FAIL|WARN)" "${OUTPUT_DIR}/${compiled_name}.cupstestppd.log" | head -10 | sed 's/^/    /'
+                    ((++FAILED))
                 fi
             fi
         done

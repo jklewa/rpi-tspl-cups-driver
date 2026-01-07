@@ -1,5 +1,6 @@
 #!/bin/bash
 # Validate PPD files using cupstestppd
+# This script runs in ARM Docker containers where the filter is installed
 
 set -euo pipefail
 
@@ -12,6 +13,16 @@ OUTPUT_DIR="${OUTPUT_DIR:-/opt/test/output}"
 echo "PPD Validation Tests"
 echo "===================="
 
+# Verify filter is installed (required for cupstestppd to pass)
+FILTER_PATH="/usr/lib/cups/filter/raster-tspl"
+if [[ ! -x "$FILTER_PATH" ]]; then
+    echo "ERROR: Filter not found at $FILTER_PATH"
+    echo "cupstestppd requires the filter to be installed."
+    exit 1
+fi
+echo "Filter installed: $FILTER_PATH"
+echo ""
+
 TOTAL=0
 PASSED=0
 FAILED=0
@@ -21,15 +32,17 @@ for ppd_file in "${PPD_DIR}"/*.ppd; do
     ppd_name=$(basename "$ppd_file")
     ppd_passed=true
 
-    # Run cupstestppd for informational purposes only
-    # Expected failures:
-    # - Custom page size dimensions (label printers use non-standard sizes)
-    # - Missing filter file (if testing on different architecture)
     echo "Testing ${ppd_name}..."
+
+    # Run cupstestppd strictly - should pass now that filter is installed
+    # and page size dimensions are correct
     if cupstestppd -W none "$ppd_file" > "${OUTPUT_DIR}/${ppd_name}.cupstestppd.log" 2>&1; then
         echo "  cupstestppd: PASS"
     else
-        echo "  cupstestppd: INFO (expected issues with custom label sizes)"
+        echo "  cupstestppd: FAIL"
+        echo "  Log output:"
+        grep -E "(FAIL|WARN)" "${OUTPUT_DIR}/${ppd_name}.cupstestppd.log" | head -20 | sed 's/^/    /'
+        ppd_passed=false
     fi
 
     # Required validation: Check required attributes
