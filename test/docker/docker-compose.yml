@@ -1,0 +1,34 @@
+# Purpose: Orchestrate multi-architecture tests
+
+version: '3.8'
+
+services:
+  # aarch64 filter tests
+  test-aarch64:
+    build:
+      context: ../..
+      dockerfile: test/docker/Dockerfile.aarch64
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    volumes:
+      - ./output/aarch64:/opt/test/output
+    environment:
+      - ARCH=aarch64
+      - PPD_DIR=/opt/test/ppd
+    command: ["--all"]
+
+  # armv7 filter tests
+  test-armv7:
+    build:
+      context: ../..
+      dockerfile: test/docker/Dockerfile.armv7
+      platforms:
+        - linux/arm/v7
+    platform: linux/arm/v7
+    volumes:
+      - ./output/armv7:/opt/test/output
+    environment:
+      - ARCH=armv7
+      - PPD_DIR=/opt/test/ppd
+    command: ["--all"]

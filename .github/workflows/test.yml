@@ -1,0 +1,190 @@
+name: Test CUPS Driver
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # Job 1: PPD Validation and DRV Compilation (native x86)
+  validate-ppd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install CUPS tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cups cups-filters cups-ppdc
+
+      - name: Validate PPD files
+        run: |
+          EXIT_CODE=0
+          for ppd in ppd/*.ppd; do
+            echo "Validating $ppd..."
+            if ! cupstestppd -v "$ppd"; then
+              EXIT_CODE=1
+            fi
+          done
+          exit $EXIT_CODE
+
+      - name: Check required PPD attributes
+        run: |
+          EXIT_CODE=0
+          for ppd in ppd/*.ppd; do
+            echo "Checking $ppd..."
+            if ! grep -q "cupsModelNumber.*20" "$ppd"; then
+              echo "ERROR: Missing cupsModelNumber 20 in $ppd"
+              EXIT_CODE=1
+            fi
+            if ! grep -q "raster-tspl" "$ppd"; then
+              echo "ERROR: Missing raster-tspl filter in $ppd"
+              EXIT_CODE=1
+            fi
+          done
+          exit $EXIT_CODE
+
+      - name: Check for correct option names
+        run: |
+          EXIT_CODE=0
+          for ppd in ppd/*.ppd; do
+            echo "Checking options in $ppd..."
+            if ! grep -q "^\*OpenUI \*Darkness" "$ppd"; then
+              echo "WARNING: Missing Darkness option in $ppd"
+            fi
+            if ! grep -q "^\*OpenUI \*zePrintRate" "$ppd"; then
+              echo "WARNING: Missing zePrintRate option in $ppd"
+            fi
+            if ! grep -q "^\*OpenUI \*zeMediaTracking" "$ppd"; then
+              echo "WARNING: Missing zeMediaTracking option in $ppd"
+            fi
+          done
+          exit $EXIT_CODE
+
+      - name: Compile DRV files
+        run: |
+          mkdir -p build/ppd
+          EXIT_CODE=0
+          for drv in drv/*.drv; do
+            echo "Compiling $drv..."
+            if ! ppdc -d build/ppd -l en --lf -v "$drv"; then
+              EXIT_CODE=1
+            fi
+          done
+          exit $EXIT_CODE
+
+      - name: Validate compiled PPDs
+        run: |
+          for ppd in build/ppd/*.ppd; do
+            if [ -f "$ppd" ]; then
+              echo "Validating compiled $ppd..."
+              cupstestppd "$ppd" || echo "Warning: cupstestppd issues in $ppd"
+            fi
+          done
+
+      - name: Upload compiled PPDs
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-ppds
+          path: build/ppd/
+
+  # Job 2: aarch64 Filter Tests (emulated)
+  test-aarch64:
+    runs-on: ubuntu-latest
+    needs: validate-ppd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build aarch64 test image
+        run: |
+          docker buildx build \
+            --platform linux/arm64 \
+            --load \
+            -t tspl-test-aarch64 \
+            -f test/docker/Dockerfile.aarch64 \
+            .
+
+      - name: Run aarch64 tests
+        run: |
+          mkdir -p test-output
+          docker run --rm \
+            -v "$PWD/test-output:/opt/test/output" \
+            tspl-test-aarch64 --all
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-aarch64
+          path: test-output/
+
+  # Job 3: armv7 Filter Tests (emulated)
+  test-armv7:
+    runs-on: ubuntu-latest
+    needs: validate-ppd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build armv7 test image
+        run: |
+          docker buildx build \
+            --platform linux/arm/v7 \
+            --load \
+            -t tspl-test-armv7 \
+            -f test/docker/Dockerfile.armv7 \
+            .
+
+      - name: Run armv7 tests
+        run: |
+          mkdir -p test-output
+          docker run --rm \
+            -v "$PWD/test-output:/opt/test/output" \
+            tspl-test-armv7 --all
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-armv7
+          path: test-output/
+
+  # Job 4: Summary
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [validate-ppd, test-aarch64, test-armv7]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate summary
+        run: |
+          echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| PPD Validation | ${{ needs.validate-ppd.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| aarch64 Filter | ${{ needs.test-aarch64.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| armv7 Filter | ${{ needs.test-armv7.result }} |" >> $GITHUB_STEP_SUMMARY
