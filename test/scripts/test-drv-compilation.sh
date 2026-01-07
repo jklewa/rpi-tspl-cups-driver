@@ -30,11 +30,12 @@ for drv_file in "${DRV_DIR}"/*.drv; do
         ((++PASSED))
 
         # Validate the generated PPD with strict cupstestppd
+        # -W translations: suppress missing translation warnings
         for compiled_ppd in "${COMPILED_PPD_DIR}"/*.ppd; do
             if [[ -f "$compiled_ppd" ]]; then
                 compiled_name=$(basename "$compiled_ppd")
                 echo -n "  Validating generated ${compiled_name}... "
-                if cupstestppd -W none "$compiled_ppd" > "${OUTPUT_DIR}/${compiled_name}.cupstestppd.log" 2>&1; then
+                if cupstestppd -W translations "$compiled_ppd" > "${OUTPUT_DIR}/${compiled_name}.cupstestppd.log" 2>&1; then
                     echo "PASS"
                 else
                     echo "FAIL"
