@@ -20,14 +20,14 @@ PASSED=0
 FAILED=0
 
 for drv_file in "${DRV_DIR}"/*.drv; do
-    ((TOTAL++))
+    ((++TOTAL))
     drv_name=$(basename "$drv_file")
     echo -n "Compiling ${drv_name}... "
 
     # Run ppdc
     if ppdc -d "${COMPILED_PPD_DIR}" -l en --lf -v "$drv_file" > "${OUTPUT_DIR}/${drv_name}.ppdc.log" 2>&1; then
         echo "PASS"
-        ((PASSED++))
+        ((++PASSED))
 
         # Validate the generated PPD
         for compiled_ppd in "${COMPILED_PPD_DIR}"/*.ppd; do
@@ -43,7 +43,7 @@ for drv_file in "${DRV_DIR}"/*.drv; do
         done
     else
         echo "FAIL"
-        ((FAILED++))
+        ((++FAILED))
         cat "${OUTPUT_DIR}/${drv_name}.ppdc.log"
     fi
 done

@@ -17,17 +17,17 @@ PASSED=0
 FAILED=0
 
 for ppd_file in "${PPD_DIR}"/*.ppd; do
-    ((TOTAL++))
+    ((++TOTAL))
     ppd_name=$(basename "$ppd_file")
     echo -n "Testing ${ppd_name}... "
 
     # Run cupstestppd with -W none to suppress warnings about custom sizes
     if cupstestppd -W none "$ppd_file" > "${OUTPUT_DIR}/${ppd_name}.cupstestppd.log" 2>&1; then
         echo "PASS"
-        ((PASSED++))
+        ((++PASSED))
     else
         echo "FAIL"
-        ((FAILED++))
+        ((++FAILED))
         # Show first 10 lines of error
         head -n 10 "${OUTPUT_DIR}/${ppd_name}.cupstestppd.log"
     fi
@@ -45,7 +45,7 @@ for ppd_file in "${PPD_DIR}"/*.ppd; do
         echo "OK"
     else
         echo "FAIL (missing raster-tspl filter)"
-        ((FAILED++))
+        ((++FAILED))
     fi
 
     # Check for required options

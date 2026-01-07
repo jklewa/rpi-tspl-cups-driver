@@ -41,7 +41,7 @@ if $RUN_PPD; then
     if "${SCRIPT_DIR}/test-ppd-validation.sh"; then
         echo ""
     else
-        ((FAILURES++))
+        ((++FAILURES))
         echo ""
     fi
 fi
@@ -51,7 +51,7 @@ if $RUN_DRV; then
     if "${SCRIPT_DIR}/test-drv-compilation.sh"; then
         echo ""
     else
-        ((FAILURES++))
+        ((++FAILURES))
         echo ""
     fi
 fi
@@ -61,7 +61,7 @@ if $RUN_FILTER; then
     if "${SCRIPT_DIR}/test-filter-output.sh"; then
         echo ""
     else
-        ((FAILURES++))
+        ((++FAILURES))
         echo ""
     fi
 fi

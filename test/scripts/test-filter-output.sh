@@ -47,7 +47,7 @@ run_filter_test() {
     local raster_file="$3"
     local options="$4"
 
-    ((TOTAL++))
+    ((++TOTAL))
     echo ""
     echo "Test: ${test_name}"
     echo "  PPD: $(basename "$ppd_file")"
@@ -66,7 +66,7 @@ run_filter_test() {
     else
         echo "FAILED (exit code $?)"
         cat "$log_file"
-        ((FAILED++))
+        ((++FAILED))
         return 1
     fi
 
@@ -74,11 +74,11 @@ run_filter_test() {
     echo -n "  Validating TSPL structure... "
     if python3 "${SCRIPT_DIR}/parse-tspl.py" "$output_file" > "${OUTPUT_DIR}/${test_name}.parsed.json" 2>&1; then
         echo "PASS"
-        ((PASSED++))
+        ((++PASSED))
     else
         echo "FAIL"
         cat "${OUTPUT_DIR}/${test_name}.parsed.json"
-        ((FAILED++))
+        ((++FAILED))
         return 1
     fi
 
