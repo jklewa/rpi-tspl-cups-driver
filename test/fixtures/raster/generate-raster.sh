@@ -102,16 +102,19 @@ generate_raster() {
     echo "  Converting to CUPS raster..."
 
     # The 'cups' device creates CUPS raster format
-    if gs -q -dNOPAUSE -dBATCH -dSAFER \
+    # Note: gs may exit 0 even if CUPS device is not available
+    gs -q -dNOPAUSE -dBATCH -dSAFER \
         -sDEVICE=cups \
         -sOutputFile="$ras_file" \
         -dDEVICEWIDTHPOINTS="$width_pts" \
         -dDEVICEHEIGHTPOINTS="$height_pts" \
         -r203 \
-        "$input_file" 2>/dev/null; then
-        :
-    else
-        echo "  WARNING: Ghostscript CUPS device not available"
+        "$input_file" 2>/dev/null || true
+
+    # Check if gs actually created the file
+    if [[ ! -f "$ras_file" ]] || [[ ! -s "$ras_file" ]]; then
+        echo "  Ghostscript CUPS device did not create output"
+        rm -f "$ras_file"
 
         # Alternative: Use cupsfilter if available (converts PNG to raster)
         if command -v cupsfilter &> /dev/null && [[ -n "$PPD_FILE" ]]; then
@@ -124,10 +127,12 @@ generate_raster() {
         fi
 
         # If still no raster, create a minimal valid CUPS raster file
-        if [[ ! -f "$ras_file" ]]; then
+        if [[ ! -f "$ras_file" ]] || [[ ! -s "$ras_file" ]]; then
             echo "  Creating minimal CUPS raster file..."
             create_minimal_raster "$ras_file" "$width_pts" "$height_pts"
         fi
+    else
+        echo "  Ghostscript created raster file"
     fi
 
     if [[ -f "$ras_file" ]]; then
