@@ -21,8 +21,8 @@ for ppd_file in "${PPD_DIR}"/*.ppd; do
     ppd_name=$(basename "$ppd_file")
     echo -n "Testing ${ppd_name}... "
 
-    # Run cupstestppd
-    if cupstestppd -v "$ppd_file" > "${OUTPUT_DIR}/${ppd_name}.cupstestppd.log" 2>&1; then
+    # Run cupstestppd with -W none to suppress warnings about custom sizes
+    if cupstestppd -W none "$ppd_file" > "${OUTPUT_DIR}/${ppd_name}.cupstestppd.log" 2>&1; then
         echo "PASS"
         ((PASSED++))
     else

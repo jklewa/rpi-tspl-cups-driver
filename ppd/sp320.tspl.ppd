@@ -25,14 +25,6 @@
 *cupsFilter: "application/vnd.cups-raster 0 raster-tspl"
 *cupsLanguages: "en zh_CN"
 
-*UIConstraints: *Occurrence 0 *SpecifiedPages
-*UIConstraints: *SpecifiedPages *Occurrence 0
-*UIConstraints: *Occurrence 1 *SpecifiedPages
-*UIConstraints: *SpecifiedPages *Occurrence 1
-*UIConstraints: *Occurrence 2 *SpecifiedPages
-*UIConstraints: *SpecifiedPages *Occurrence 2
-*UIConstraints: *Occurrence 3 *SpecifiedPages None
-*UIConstraints: *SpecifiedPages None *Occurrence 3
 
 *MaxMediaWidth: "306.14"
 *MaxMediaHeight: "6480"

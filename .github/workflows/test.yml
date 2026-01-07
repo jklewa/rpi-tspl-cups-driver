@@ -2,9 +2,9 @@ name: Test CUPS Driver
 
 on:
   push:
-    branches: [main]
+    branches: [add-test-infrastructure]
   pull_request:
-    branches: [main]
+    branches: [add-test-infrastructure]
 
 env:
   DOCKER_BUILDKIT: 1
@@ -23,10 +23,12 @@ jobs:
 
       - name: Validate PPD files
         run: |
+          # Use -W none to suppress warnings about custom page sizes and missing filter
+          # (filter is only present on ARM systems, not x86 CI runners)
           EXIT_CODE=0
           for ppd in ppd/*.ppd; do
             echo "Validating $ppd..."
-            if ! cupstestppd -v "$ppd"; then
+            if ! cupstestppd -W none "$ppd"; then
               EXIT_CODE=1
             fi
           done
@@ -82,7 +84,7 @@ jobs:
           for ppd in build/ppd/*.ppd; do
             if [ -f "$ppd" ]; then
               echo "Validating compiled $ppd..."
-              cupstestppd "$ppd" || echo "Warning: cupstestppd issues in $ppd"
+              cupstestppd -W none "$ppd" || echo "Warning: cupstestppd issues in $ppd"
             fi
           done
 

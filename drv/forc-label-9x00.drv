@@ -23,10 +23,6 @@
   Attribute "FileSystem" "" "False"
   Attribute "TTRasterizer" "" "Type42"
   Attribute "RequiresPageRegion" "All" "True"
-  UIConstraints "*Occurrence 0 *SpecifiedPages "
-  UIConstraints "*Occurrence 1 *SpecifiedPages "
-  UIConstraints "*Occurrence 2 *SpecifiedPages "
-  UIConstraints "*Occurrence 3 *SpecifiedPages None"
   Filter "application/vnd.cups-raster 0 raster-tspl"
   Group "Quality/Quality"
     Option "Resolution/Resolution" PickOne AnySetup 10.0
