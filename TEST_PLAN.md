@@ -8,7 +8,7 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 
 ## Implementation Status
 
-> Last updated: 2026-01-07 (PR #3)
+> Last updated: 2026-01-07 (PR #3) - **All phases complete**
 
 ### Phase Summary
 
@@ -20,14 +20,24 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
 | Phase 4 | Filter Output Testing | ✅ Complete |
 | Phase 5 | GitHub Actions CI | ✅ Complete |
 
-### Latest CI Results (Run #20770964934)
+### Latest CI Results (Run #20771489122)
 
 | Job | Status | Details |
 |-----|--------|---------|
 | validate-ppd | ✅ Success | 6/6 PPDs validated, 1/1 DRV compiled |
-| test-aarch64 | ✅ Success | Filter binary verified (ARM64 ELF) |
-| test-armv7 | ✅ Success | Filter binary verified (ARM32 ELF) |
+| test-aarch64 | ✅ Success | 5/5 filter tests passed |
+| test-armv7 | ✅ Success | 5/5 filter tests passed |
 | test-summary | ✅ Success | All tests passed |
+
+### Filter Test Results
+
+| Test Case | PPD Option | aarch64 | armv7 |
+|-----------|------------|---------|-------|
+| default | (none) | ✅ PASS | ✅ PASS |
+| max-darkness | Darkness=15 | ✅ PASS | ✅ PASS |
+| min-speed | zePrintRate=2 | ✅ PASS | ✅ PASS |
+| bline-media | zeMediaTracking=BLine | ✅ PASS | ✅ PASS |
+| rotated | Rotate=1 | ✅ PASS | ✅ PASS |
 
 ### Detailed Test Coverage
 
@@ -63,6 +73,8 @@ Create a Docker-based test infrastructure to validate DRV/PPD files and TSPL fil
    - Missing filter file on x86 (filter only exists on ARM)
    - Custom page size dimensions (label printers use non-standard sizes)
 3. **Bash arithmetic bug** - Changed `((VAR++))` to `((++VAR))` to avoid exit code 1 with `set -e`
+4. **ImageMagick security policy** - Debian blocks PS/PDF output; added `cupsfilter` fallback for raster generation
+5. **Ghostscript CUPS device** - Not available in slim containers; `cupsfilter` successfully generates CUPS raster files
 
 ---
 
